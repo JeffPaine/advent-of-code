@@ -70,3 +70,24 @@ func TestCalculatePositionWithAim(t *testing.T) {
 		t.Errorf("CalculatePositionWithAim(%v) = %v, want %v", input, got, want)
 	}
 }
+
+func TestInitPower(t *testing.T) {
+	input := []string{
+		"00100",
+		"11110",
+		"10110",
+		"10111",
+		"10101",
+		"01111",
+		"00111",
+		"11100",
+		"10000",
+		"11001",
+		"00010",
+		"01010",
+	}
+	want := Power{Gamma: 22, Epsilon: 9}
+	if got := InitPower(input); got != want {
+		t.Errorf("InitPower(%v) = %v, want %v", input, got, want)
+	}
+}

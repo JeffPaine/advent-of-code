@@ -96,3 +96,54 @@ func CalculatePositionWithAim(commands []Command) Position {
 	}
 	return p
 }
+
+type Power struct {
+	Gamma   int64
+	Epsilon int64
+}
+
+func InitPower(lines []string) Power {
+	// Assumes all lines are the same width.
+	width := len(lines[0])
+
+	// Calculate the most and least frequent value per column.
+	zeroesPerColumn := make([]int, width)
+	onesPerColumn := make([]int, width)
+	for _, line := range lines {
+		for i, val := range line {
+			switch val {
+			case '0':
+				zeroesPerColumn[i] += 1
+			case '1':
+				onesPerColumn[i] += 1
+			}
+		}
+	}
+
+	// Convert the per-column frequencies to decimal values.
+	// E.g. [1, 0, 1, 1] -> 11.
+	gamma := ""
+	epsilon := ""
+	for i := 0; i < width; i++ {
+		if zeroesPerColumn[i] > onesPerColumn[i] {
+			gamma += "0"
+			epsilon += "1"
+		} else {
+			gamma += "1"
+			epsilon += "0"
+		}
+	}
+	g, err := strconv.ParseInt(gamma, 2, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	e, err := strconv.ParseInt(epsilon, 2, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return Power{Gamma: g, Epsilon: e}
+}
+
+func (p Power) Consumption() int64 {
+	return p.Gamma * p.Epsilon
+}
