@@ -110,7 +110,8 @@ type Report struct {
 func NewReport(lines []string) Report {
 	r := Report{lines: lines}
 	r.calcGammaAndEpsilon()
-	r.calcO2AndCO2()
+	r.O2Rating = mostCommon(r.lines)
+	r.CO2Rating = leastCommon(r.lines)
 	return r
 }
 
@@ -151,63 +152,6 @@ func (r *Report) calcGammaAndEpsilon() {
 	r.Epsilon = epsilon
 }
 
-func (r *Report) calcO2AndCO2() {
-	// We assume all lines are the same width.
-	width := len(r.lines[0])
-
-	// To find oxygen generator rating, determine the most common value (0
-	// or 1) in the current bit position, and keep only numbers with that
-	// bit in that position. If 0 and 1 are equally common, keep values
-	// with a 1 in the position being considered.
-	//
-	// To find CO2 scrubber rating, determine the least common value (0 or
-	// 1) in the current bit position, and keep only numbers with that bit
-	// in that position. If 0 and 1 are equally common, keep values with a
-	// 0 in the position being considered.
-
-	o2Matches := r.lines
-	for i := 0; i < width; i++ {
-		zeroesPerColumn := perColumn('0', o2Matches)
-		onesPerColumn := perColumn('1', o2Matches)
-
-		// Oxygen values are the most common, CO2 are the least.
-		o2Val := 0
-		if zeroesPerColumn[i] == onesPerColumn[i] || zeroesPerColumn[i] < onesPerColumn[i] {
-			o2Val = 1
-		}
-
-		o2Matches = filterLines(i, o2Val, o2Matches)
-
-		if len(o2Matches) == 1 {
-			r.O2Rating = BinaryStringToInt(o2Matches[0])
-			break
-		}
-	}
-
-	co2Matches := r.lines
-	for i := 0; i < width; i++ {
-		zeroesPerColumn := perColumn('0', co2Matches)
-		onesPerColumn := perColumn('1', co2Matches)
-
-		// Oxygen values are the most common, CO2 are the least.
-		o2Val := 0
-		if zeroesPerColumn[i] == onesPerColumn[i] || zeroesPerColumn[i] < onesPerColumn[i] {
-			o2Val = 1
-		}
-		co2Val := 0
-		if o2Val == 0 {
-			co2Val = 1
-		}
-
-		co2Matches = filterLines(i, co2Val, co2Matches)
-
-		if len(co2Matches) == 1 {
-			r.CO2Rating = BinaryStringToInt(co2Matches[0])
-			break
-		}
-	}
-}
-
 func (r Report) Consumption() int {
 	return r.Gamma * r.Epsilon
 }
@@ -216,6 +160,7 @@ func (r Report) LifeSupportRating() int {
 	return r.O2Rating * r.CO2Rating
 }
 
+// BinaryStringToInt converts a binary string to an int. For example: "1001" -> 9.
 func BinaryStringToInt(s string) int {
 	out := 0
 	for _, val := range s {
@@ -247,4 +192,41 @@ func perColumn(char rune, lines []string) []int {
 		}
 	}
 	return out
+}
+
+func common(lines []string, inverse bool) int {
+	width := len(lines[0])
+	matches := lines
+	for i := 0; i < width; i++ {
+		zeroesPerColumn := perColumn('0', matches)
+		onesPerColumn := perColumn('1', matches)
+
+		val := 0
+		if zeroesPerColumn[i] == onesPerColumn[i] || zeroesPerColumn[i] < onesPerColumn[i] {
+			val = 1
+		}
+		if inverse {
+			if val == 0 {
+				val = 1
+			} else {
+				val = 0
+			}
+		}
+
+		matches = filterLines(i, val, matches)
+
+		if len(matches) == 1 {
+			break
+		}
+	}
+	return BinaryStringToInt(matches[0])
+
+}
+
+func mostCommon(lines []string) int {
+	return common(lines, false)
+}
+
+func leastCommon(lines []string) int {
+	return common(lines, true)
 }
