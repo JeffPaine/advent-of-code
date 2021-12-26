@@ -96,3 +96,33 @@ func TestNewReport(t *testing.T) {
 		t.Errorf("NewReport(%v).Epsilon = %v, want %v", input, got, want)
 	}
 }
+
+func TestLifeSupportRating(t *testing.T) {
+	input := []string{
+		"00100",
+		"11110",
+		"10110",
+		"10111",
+		"10101",
+		"01111",
+		"00111",
+		"11100",
+		"10000",
+		"11001",
+		"00010",
+		"01010",
+	}
+	report := NewReport(input)
+	want := 230
+	if got := report.LifeSupportRating(); got != want {
+		t.Errorf("LifeSupportRating() = %v, want %v", got, want)
+	}
+}
+
+func TestBinaryStringToInt(t *testing.T) {
+	input := "1011"
+	want := 11
+	if got := BinaryStringToInt(input); got != want {
+		t.Errorf("BinaryStringToInt(%v) = %v, want %v", input, got, want)
+	}
+}

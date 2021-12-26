@@ -21,4 +21,5 @@ func main() {
 	}
 	report := advent.NewReport(lines)
 	log.Println("Solution 1:", report.Consumption())
+	log.Println("Solution 2:", report.LifeSupportRating())
 }
