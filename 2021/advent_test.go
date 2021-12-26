@@ -87,11 +87,11 @@ func TestNewReport(t *testing.T) {
 		"01010",
 	}
 	report := NewReport(input)
-	want := int64(22)
+	want := 22
 	if got := report.Gamma; got != want {
 		t.Errorf("NewReport(%v).Gamma = %v, want %v", input, got, want)
 	}
-	want = int64(9)
+	want = 9
 	if got := report.Epsilon; got != want {
 		t.Errorf("NewReport(%v).Epsilon = %v, want %v", input, got, want)
 	}

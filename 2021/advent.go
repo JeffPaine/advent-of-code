@@ -100,8 +100,8 @@ func CalculatePositionWithAim(commands []Command) Position {
 type Report struct {
 	lines []string
 
-	Gamma   int64
-	Epsilon int64
+	Gamma   int
+	Epsilon int
 }
 
 func NewReport(lines []string) Report {
@@ -111,11 +111,10 @@ func NewReport(lines []string) Report {
 }
 
 func (r *Report) populateFields() {
-	// Assumes all lines are the same width.
+	// We assume all lines are the same width.
 	width := len(r.lines[0])
 
-	// Calculate the most and least frequent value per column.
-	// E.g. [1, 0, 1, 1].
+	// Count the the number of 0s and 1s per column.
 	zeroesPerColumn := make([]int, width)
 	onesPerColumn := make([]int, width)
 	for _, line := range r.lines {
@@ -129,31 +128,35 @@ func (r *Report) populateFields() {
 		}
 	}
 
-	// Convert the per-column frequencies to decimal values.
-	// E.g. [1, 0, 1, 1] -> 11.
-	gamma := ""
-	epsilon := ""
+	// Determine the most and least common value (0 or 1) per column and
+	// construct the gamma and epsilon values out of these.
+	//
+	// Epsilon is comprised of all the least frequent, per-column values.
+	// Gamma is comprised of all the most frequent, per-column values.
+	//
+	// zeroesPerColumn := [5, 4, 4]
+	// onesPerColumn   := [4, 5, 5]
+	//
+	// Results in:
+	//
+	// Epsilon := 0b100
+	// Gamma   := 0b011
+	//
+	gamma := 0
+	epsilon := 0
 	for i := 0; i < width; i++ {
+		gamma = gamma << 1
+		epsilon = epsilon << 1
 		if zeroesPerColumn[i] > onesPerColumn[i] {
-			gamma += "0"
-			epsilon += "1"
+			epsilon |= 1
 		} else {
-			gamma += "1"
-			epsilon += "0"
+			gamma |= 1
 		}
 	}
-	g, err := strconv.ParseInt(gamma, 2, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	e, err := strconv.ParseInt(epsilon, 2, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	r.Gamma = g
-	r.Epsilon = e
+	r.Gamma = gamma
+	r.Epsilon = epsilon
 }
 
-func (r Report) Consumption() int64 {
+func (r Report) Consumption() int {
 	return r.Gamma * r.Epsilon
 }
