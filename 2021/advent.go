@@ -97,19 +97,28 @@ func CalculatePositionWithAim(commands []Command) Position {
 	return p
 }
 
-type Power struct {
+type Report struct {
+	lines []string
+
 	Gamma   int64
 	Epsilon int64
 }
 
-func InitPower(lines []string) Power {
+func NewReport(lines []string) Report {
+	r := Report{lines: lines}
+	r.populateFields()
+	return r
+}
+
+func (r *Report) populateFields() {
 	// Assumes all lines are the same width.
-	width := len(lines[0])
+	width := len(r.lines[0])
 
 	// Calculate the most and least frequent value per column.
+	// E.g. [1, 0, 1, 1].
 	zeroesPerColumn := make([]int, width)
 	onesPerColumn := make([]int, width)
-	for _, line := range lines {
+	for _, line := range r.lines {
 		for i, val := range line {
 			switch val {
 			case '0':
@@ -141,9 +150,10 @@ func InitPower(lines []string) Power {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return Power{Gamma: g, Epsilon: e}
+	r.Gamma = g
+	r.Epsilon = e
 }
 
-func (p Power) Consumption() int64 {
-	return p.Gamma * p.Epsilon
+func (r Report) Consumption() int64 {
+	return r.Gamma * r.Epsilon
 }

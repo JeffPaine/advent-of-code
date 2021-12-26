@@ -19,6 +19,6 @@ func main() {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	power := advent.InitPower(lines)
-	log.Println("Solution 1:", power.Consumption())
+	report := advent.NewReport(lines)
+	log.Println("Solution 1:", report.Consumption())
 }

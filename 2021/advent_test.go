@@ -71,7 +71,7 @@ func TestCalculatePositionWithAim(t *testing.T) {
 	}
 }
 
-func TestInitPower(t *testing.T) {
+func TestNewReport(t *testing.T) {
 	input := []string{
 		"00100",
 		"11110",
@@ -86,8 +86,13 @@ func TestInitPower(t *testing.T) {
 		"00010",
 		"01010",
 	}
-	want := Power{Gamma: 22, Epsilon: 9}
-	if got := InitPower(input); got != want {
-		t.Errorf("InitPower(%v) = %v, want %v", input, got, want)
+	report := NewReport(input)
+	want := int64(22)
+	if got := report.Gamma; got != want {
+		t.Errorf("NewReport(%v).Gamma = %v, want %v", input, got, want)
+	}
+	want = int64(9)
+	if got := report.Epsilon; got != want {
+		t.Errorf("NewReport(%v).Epsilon = %v, want %v", input, got, want)
 	}
 }
