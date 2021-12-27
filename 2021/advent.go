@@ -230,3 +230,103 @@ func mostCommon(lines []string) int {
 func leastCommon(lines []string) int {
 	return common(lines, true)
 }
+
+type Spot struct {
+	num    int
+	marked bool
+}
+
+type Board struct {
+	rows [][]Spot
+}
+
+func (b *Board) MarkSpot(num int) {
+	for i := range b.rows {
+		for j := range b.rows[i] {
+			if b.rows[i][j].num == num {
+				b.rows[i][j].marked = true
+			}
+		}
+	}
+}
+
+func (b Board) HasBingo() bool {
+	size := len(b.rows[0])
+	countPerRow := make([]int, size)
+	countPerColumn := make([]int, size)
+	for ir, row := range b.rows {
+		for ic, s := range row {
+			if s.marked {
+				countPerRow[ir]++
+				countPerColumn[ic]++
+			}
+		}
+	}
+	for _, count := range countPerRow {
+		if count == size {
+			return true
+		}
+	}
+	for _, count := range countPerColumn {
+		if count == size {
+			return true
+		}
+	}
+	return false
+}
+
+func (b Board) Score(lastCalled int) int {
+	unmarked := 0
+	for _, row := range b.rows {
+		for _, s := range row {
+			if !s.marked {
+				unmarked += s.num
+			}
+		}
+	}
+	return unmarked * lastCalled
+}
+
+func ParseBingoInput(lines []string) ([]int, []Board) {
+	moves := []int{}
+	for _, val := range strings.Split(lines[0], ",") {
+		num, err := strconv.Atoi(val)
+		if err != nil {
+			log.Fatal(err)
+		}
+		moves = append(moves, num)
+	}
+
+	boards := []Board{}
+	currBoard := Board{}
+
+	for i := 1; i < len(lines); i++ {
+		// End of current board (if any).
+		if lines[i] == "" {
+			if len(currBoard.rows) > 0 {
+				boards = append(boards, currBoard)
+				currBoard = Board{}
+			}
+			continue
+		} else {
+			currBoard.rows = append(currBoard.rows, parseBoardLine(lines[i]))
+		}
+	}
+	if len(currBoard.rows) > 0 {
+		boards = append(boards, currBoard)
+	}
+	return moves, boards
+}
+
+func parseBoardLine(line string) []Spot {
+	spots := []Spot{}
+	strs := strings.Fields(line)
+	for _, val := range strs {
+		num, err := strconv.Atoi(val)
+		if err != nil {
+			log.Fatal(err)
+		}
+		spots = append(spots, Spot{num: num, marked: false})
+	}
+	return spots
+}
