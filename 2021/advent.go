@@ -361,8 +361,9 @@ type Grid struct {
 	rows [][]int
 }
 
-func NewGrid(r io.Reader) Grid {
+func NewGrid(r io.Reader, diag bool) Grid {
 	// Parse the input.
+	// Example line: x1,y1 -> x2,y2
 	// Example line: 0,9 -> 5,9
 	var lines []line
 	scanner := bufio.NewScanner(r)
@@ -407,9 +408,33 @@ func NewGrid(r io.Reader) Grid {
 			for i := start; i <= finish; i++ {
 				rows[i][column] += 1
 			}
-		default:
-			// For now, we simply ignore diagonal lines.
+		// Only other line type, per the directions, is diagonal at a 45 degree angle.
+		case diag:
+			// Length is the same horizontally and vertically.
+			var length int = line.x1 - line.x2
+			if line.x2 > line.x1 {
+				length = line.x2 - line.x1
+			}
 
+			// Determine starting points and if the values increase or decrease.
+			var x int = line.x1
+			var xRev bool = line.x2 < line.x1
+			var y int = line.y1
+			var yRev bool = line.y2 < line.y1
+
+			for i := 0; i <= length; i++ {
+				rows[y][x] += 1
+				if xRev {
+					x--
+				} else {
+					x++
+				}
+				if yRev {
+					y--
+				} else {
+					y++
+				}
+			}
 		}
 	}
 

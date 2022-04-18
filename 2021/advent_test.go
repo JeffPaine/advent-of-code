@@ -403,7 +403,7 @@ func TestMaxVals(t *testing.T) {
 	}
 }
 
-func TestNewGrid(t *testing.T) {
+func TestNewGridNoDiagonal(t *testing.T) {
 	input := strings.NewReader(`0,9 -> 5,9
 	8,0 -> 0,8
 	9,4 -> 3,4
@@ -426,9 +426,39 @@ func TestNewGrid(t *testing.T) {
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{2, 2, 2, 1, 1, 1, 0, 0, 0, 0},
 	}
-	grid := NewGrid(input)
-	if !reflect.DeepEqual(grid.rows, want) {
-		t.Errorf("NewGrid(line) returned unexpected rows,\ngot : %v\nwant: %v", grid.rows, want)
+	got := NewGrid(input, false)
+	if !reflect.DeepEqual(got.rows, want) {
+		t.Errorf("NewGrid(line, false) returned unexpected rows,\ngot : %v\nwant: %v", got.rows, want)
+	}
+
+}
+
+func TestNewGridWithDiagonal(t *testing.T) {
+	input := strings.NewReader(`0,9 -> 5,9
+	8,0 -> 0,8
+	9,4 -> 3,4
+	2,2 -> 2,1
+	7,0 -> 7,4
+	6,4 -> 2,0
+	0,9 -> 2,9
+	3,4 -> 1,4
+	0,0 -> 8,8
+	5,5 -> 8,2`)
+	want := [][]int{
+		{1, 0, 1, 0, 0, 0, 0, 1, 1, 0},
+		{0, 1, 1, 1, 0, 0, 0, 2, 0, 0},
+		{0, 0, 2, 0, 1, 0, 1, 1, 1, 0},
+		{0, 0, 0, 1, 0, 2, 0, 2, 0, 0},
+		{0, 1, 1, 2, 3, 1, 3, 2, 1, 1},
+		{0, 0, 0, 1, 0, 2, 0, 0, 0, 0},
+		{0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
+		{0, 1, 0, 0, 0, 0, 0, 1, 0, 0},
+		{1, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+		{2, 2, 2, 1, 1, 1, 0, 0, 0, 0},
+	}
+	got := NewGrid(input, true)
+	if !reflect.DeepEqual(got.rows, want) {
+		t.Errorf("NewGrid(line, true) returned unexpected rows,\ngot : %v\nwant: %v", got.rows, want)
 	}
 
 }
