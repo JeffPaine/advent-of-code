@@ -2,6 +2,7 @@ package advent
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -369,4 +370,65 @@ func TestScore(t *testing.T) {
 	if got := board.Score(last); got != want {
 		t.Errorf("board.Score(%v) = %v, want %v", last, got, want)
 	}
+}
+
+func TestMaxVals(t *testing.T) {
+	tt := []struct {
+		lines []line
+		maxX  int
+		maxY  int
+	}{
+		{
+			[]line{{x1: 0, y1: 0, x2: 1, y2: 1}},
+			1,
+			1,
+		},
+		{
+			[]line{{x1: 0, y1: 0, x2: 0, y2: 0}},
+			0,
+			0,
+		},
+		{
+			[]line{{x1: 9, y1: 4, x2: 3, y2: 4}},
+			9,
+			4,
+		},
+	}
+
+	for _, test := range tt {
+		maxX, maxY := maxVals(test.lines)
+		if maxX != test.maxX || maxY != test.maxY {
+			t.Errorf("maxVals(%v) = %v, %v; want: %v, %v", test.lines, maxX, maxY, test.maxX, test.maxY)
+		}
+	}
+}
+
+func TestNewGrid(t *testing.T) {
+	input := strings.NewReader(`0,9 -> 5,9
+	8,0 -> 0,8
+	9,4 -> 3,4
+	2,2 -> 2,1
+	7,0 -> 7,4
+	6,4 -> 2,0
+	0,9 -> 2,9
+	3,4 -> 1,4
+	0,0 -> 8,8
+	5,5 -> 8,2`)
+	want := [][]int{
+		{0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+		{0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+		{0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+		{0, 1, 1, 2, 1, 1, 1, 2, 1, 1},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{2, 2, 2, 1, 1, 1, 0, 0, 0, 0},
+	}
+	grid := NewGrid(input)
+	if !reflect.DeepEqual(grid.rows, want) {
+		t.Errorf("NewGrid(line) returned unexpected rows,\ngot : %v\nwant: %v", grid.rows, want)
+	}
+
 }

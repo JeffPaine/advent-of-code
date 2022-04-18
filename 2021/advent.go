@@ -1,7 +1,9 @@
 package advent
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"strconv"
 	"strings"
@@ -329,4 +331,110 @@ func parseBoardLine(line string) []Spot {
 		spots = append(spots, Spot{num: num, marked: false})
 	}
 	return spots
+}
+
+type line struct {
+	x1, y1, x2, y2 int
+}
+
+func maxVals(lines []line) (int, int) {
+	maxX := 0
+	maxY := 0
+	for _, l := range lines {
+		if l.x1 > maxX {
+			maxX = l.x1
+		}
+		if l.x2 > maxX {
+			maxX = l.x2
+		}
+		if l.y1 > maxY {
+			maxY = l.y1
+		}
+		if l.y2 > maxY {
+			maxY = l.y2
+		}
+	}
+	return maxX, maxY
+}
+
+type Grid struct {
+	rows [][]int
+}
+
+func NewGrid(r io.Reader) Grid {
+	// Parse the input.
+	// Example line: 0,9 -> 5,9
+	var lines []line
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		var l line
+		_, err := fmt.Sscanf(scanner.Text(), "%d,%d -> %d,%d", &l.x1, &l.y1, &l.x2, &l.y2)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		lines = append(lines, l)
+	}
+
+	// Initialize the empty rows.
+	maxX, maxY := maxVals(lines)
+	var rows [][]int
+	for i := 0; i <= maxY; i++ {
+		rows = append(rows, make([]int, maxX+1))
+	}
+
+	// Fill out rows with data from the parsed lines.
+	for _, line := range lines {
+		switch {
+		// Line is horizontal.
+		case line.y1 == line.y2:
+			var row int = line.y1
+			var start int = line.x1
+			var finish int = line.x2
+			if line.x2 < line.x1 {
+				start, finish = finish, start
+			}
+			for i := start; i <= finish; i++ {
+				rows[row][i] += 1
+			}
+		// Line is vertical.
+		case line.x1 == line.x2:
+			var column int = line.x1
+			var start int = line.y1
+			var finish int = line.y2
+			if line.y2 < line.y1 {
+				start, finish = finish, start
+			}
+			for i := start; i <= finish; i++ {
+				rows[i][column] += 1
+			}
+		default:
+			// For now, we simply ignore diagonal lines.
+
+		}
+	}
+
+	return Grid{rows: rows}
+
+}
+
+// AtLeastTwo counts the number of points that have 2 or more overlapping lines.
+func (g Grid) AtLeastTwo() int {
+	sum := 0
+	for _, row := range g.rows {
+		for _, col := range row {
+			if col > 1 {
+				sum++
+			}
+		}
+	}
+	return sum
+}
+
+func (g Grid) String() string {
+	var out strings.Builder
+	fmt.Fprintf(&out, "rows (rows: %v x columns: %v):\n", len(g.rows), len(g.rows[0]))
+	for _, row := range g.rows {
+		fmt.Fprintf(&out, "  %v\n", row)
+	}
+	return out.String()
 }
