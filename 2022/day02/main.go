@@ -49,6 +49,18 @@ func (o outcome) String() string {
 	return []string{"win", "lose", "draw"}[o]
 }
 
+func newOutcome(s string) (outcome, error) {
+	switch s {
+	case "X":
+		return lose, nil
+	case "Y":
+		return draw, nil
+	case "Z":
+		return win, nil
+	}
+	return -1, fmt.Errorf("unsupported value: newOutcome(%q)", s)
+}
+
 type game struct {
 	mine   play
 	theirs play
@@ -109,6 +121,42 @@ func newGame(mine, theirs string) (game, error) {
 	return game{mine: m, theirs: t}, nil
 }
 
+func newFixedGame(o, t string) (game, error) {
+	outc, err := newOutcome(o)
+	if err != nil {
+		return game{}, fmt.Errorf("newFixedGame(%q, %q): %v", o, t, err)
+	}
+	theirs, err := newPlay(t)
+	if err != nil {
+		return game{}, fmt.Errorf("newFixedGame(%q, %q): %v", o, t, err)
+	}
+
+	var mine play
+	switch outc {
+	case draw:
+		mine = theirs
+	case win:
+		switch theirs {
+		case rock:
+			mine = paper
+		case paper:
+			mine = scissors
+		case scissors:
+			mine = rock
+		}
+	case lose:
+		switch theirs {
+		case rock:
+			mine = scissors
+		case paper:
+			mine = rock
+		case scissors:
+			mine = paper
+		}
+	}
+	return game{mine: mine, theirs: theirs}, nil
+}
+
 func main() {
 	f, err := os.Open("input.txt")
 	if err != nil {
@@ -117,6 +165,7 @@ func main() {
 	defer f.Close()
 
 	games := []game{}
+	fixedGames := []game{}
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -126,11 +175,21 @@ func main() {
 		if err != nil {
 			log.Fatalf("fmt.Sscanf(%q, \"%%q %%q\", &theirs, &mine): %v", scanner.Text(), err)
 		}
+
+		// Solution 1 games.
 		g, err := newGame(mine, theirs)
 		if err != nil {
 			log.Fatalf("newGame(%q, %q): %v", mine, theirs, err)
 		}
 		games = append(games, g)
+
+		// In solution 2, what was previously the "my move" column is now the "desired outcome" column.
+		outc := mine
+		fg, err := newFixedGame(outc, theirs)
+		if err != nil {
+			log.Fatalf("newFixedGame(%q, %q): %v", outc, theirs, err)
+		}
+		fixedGames = append(fixedGames, fg)
 	}
 
 	total := 0
@@ -138,4 +197,10 @@ func main() {
 		total += g.score()
 	}
 	log.Println("Solution 1:", total)
+
+	total = 0
+	for _, fg := range fixedGames {
+		total += fg.score()
+	}
+	log.Println("Solution 2:", total)
 }
