@@ -60,7 +60,7 @@ func findCommon(bags []bag) rune {
 	// Map of a rune to the indexes of the bags it was found in.
 	freqs := map[rune][]bool{}
 	for i, b := range bags {
-		for _, r := range []rune(b.contents) {
+		for _, r := range b.contents {
 			if len(freqs[r]) == 0 {
 				// Assumes len(bags) == 3.
 				freqs[r] = []bool{false, false, false}
