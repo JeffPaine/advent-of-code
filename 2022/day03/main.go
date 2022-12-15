@@ -26,16 +26,36 @@ func (b bag) second() []rune {
 }
 
 func (b bag) common() rune {
+	return linearCommon(b.first(), b.second())
+}
+
+func linearCommon(first, second []rune) rune {
 	var common rune
+
 loop:
-	for _, fr := range b.first() {
-		for _, sr := range b.second() {
+	for _, fr := range first {
+		for _, sr := range second {
 			if fr == sr {
 				common = fr
 				break loop
 			}
 		}
 
+	}
+	return common
+}
+
+func mapCommon(first, second []rune) rune {
+	var common rune
+	m := map[rune]struct{}{}
+	for _, r := range first {
+		m[r] = struct{}{}
+	}
+	for _, r := range second {
+		if _, ok := m[r]; ok {
+			common = r
+			break
+		}
 	}
 	return common
 }
