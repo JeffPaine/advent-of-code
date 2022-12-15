@@ -72,7 +72,7 @@ func findCommon(bags []bag) rune {
 	// Find the common rune.
 	var common rune
 	for k, v := range freqs {
-		if v[0] == true && v[1] == true && v[2] == true {
+		if v[0] && v[1] && v[2] {
 			common = k
 		}
 	}
