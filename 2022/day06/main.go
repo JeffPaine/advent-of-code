@@ -37,6 +37,48 @@ func allDifferent(runes []rune, count int) bool {
 	return true
 }
 
+// strategyOne solves via allocating a new slice and populating a new map on each iteration.
+func strategyOne(s string, count int) int {
+	runes := []rune{}
+	answer := 0
+	for i, r := range s {
+		runes = add(runes, r, count)
+		if allDifferent(runes, count) {
+			// Return the count, which is the index + 1.
+			answer = i + 1
+			break
+		}
+	}
+	return answer
+}
+
+// strategyTwo solves via a rolling window of runes and a map of counts that's update on each iteration.
+func strategyTwo(s string, window int) int {
+	answer := 0
+	runes := []rune(s)
+	m := map[rune]int{}
+
+	// Look at a sliding window of `window` runes for no duplicates.
+	for i := 0; i < len(runes); i++ {
+		m[runes[i]] += 1
+		// Populate the map up to `window` length.
+		if i < window-1 {
+			continue
+		}
+		// If the window contains only unique runes, return the count of runes processed so far.
+		if len(m) == window {
+			answer = i + 1
+			break
+		}
+		// Decrement (or delete) the oldest rune added.
+		m[runes[i-window+1]]--
+		if val, ok := m[runes[i-window+1]]; ok && val == 0 {
+			delete(m, runes[i-window+1])
+		}
+	}
+	return answer
+}
+
 func main() {
 	f, err := os.Open("input.txt")
 	if err != nil {
@@ -49,27 +91,8 @@ func main() {
 		input = scanner.Text()
 	}
 
-	runes1 := []rune{}
-	sol1 := 0
-	for i, r := range input {
-		runes1 = add(runes1, r, 4)
-		if allDifferent(runes1, 4) {
-			// Return the count, which is the index + 1.
-			sol1 = i + 1
-			break
-		}
-	}
-	fmt.Println("Solution 1:", sol1)
-
-	runes2 := []rune{}
-	sol2 := 0
-	for i, r := range input {
-		runes2 = add(runes2, r, 14)
-		if allDifferent(runes2, 14) {
-			// Return the count, which is the index + 1.
-			sol2 = i + 1
-			break
-		}
-	}
-	fmt.Println("Solution 2:", sol2)
+	fmt.Println("Solution 1:", strategyOne(input, 4))
+	fmt.Println("Solution 2:", strategyOne(input, 14))
+	fmt.Println("Solution 1:", strategyTwo(input, 4))
+	fmt.Println("Solution 2:", strategyTwo(input, 14))
 }
