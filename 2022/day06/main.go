@@ -8,16 +8,13 @@ import (
 )
 
 func add(runes []rune, r rune, count int) []rune {
-	out := make([]rune, len(runes))
-	copy(out, runes)
-
 	if len(runes) < count {
-		out = append(out, r)
-		return out
+		runes = append(runes, r)
+		return runes
 	}
 
-	out = append(out[1:], r)
-	return out
+	runes = append(runes[1:], r)
+	return runes
 }
 
 func allDifferent(runes []rune, count int) bool {
