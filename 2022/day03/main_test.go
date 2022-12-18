@@ -36,15 +36,19 @@ func lines() []line {
 func BenchmarkLinearCommon(b *testing.B) {
 	lines := lines()
 	b.ResetTimer()
-	for _, l := range lines {
-		_ = linearCommon(l.first, l.second)
+	for i := 0; i < b.N; i++ {
+		for _, l := range lines {
+			_ = linearCommon(l.first, l.second)
+		}
 	}
 }
 
 func BenchmarkMapCommon(b *testing.B) {
 	lines := lines()
 	b.ResetTimer()
-	for _, l := range lines {
-		_ = mapCommon(l.first, l.second)
+	for i := 0; i < b.N; i++ {
+		for _, l := range lines {
+			_ = mapCommon(l.first, l.second)
+		}
 	}
 }
