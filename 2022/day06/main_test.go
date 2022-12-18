@@ -35,7 +35,9 @@ func BenchmarkStrategyOne(b *testing.B) {
 		b.Run(fmt.Sprintf("count_%d", test.count), func(b *testing.B) {
 			input := input()
 			b.ResetTimer()
-			_ = strategyOne(input, test.count)
+			for i := 0; i < b.N; i++ {
+				_ = strategyOne(input, test.count)
+			}
 		})
 	}
 
@@ -53,7 +55,9 @@ func BenchmarkStrategyTwo(b *testing.B) {
 		b.Run(fmt.Sprintf("count_%d", test.count), func(b *testing.B) {
 			input := input()
 			b.ResetTimer()
-			_ = strategyTwo(input, test.count)
+			for i := 0; i < b.N; i++ {
+				_ = strategyTwo(input, test.count)
+			}
 		})
 	}
 
