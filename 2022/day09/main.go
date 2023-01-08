@@ -37,131 +37,9 @@ type point struct {
 	y int
 }
 
-func equals(p1, p2 point) bool {
-	if p1.x == p2.x && p1.y == p2.y {
-		return true
-	}
-	return false
-}
-
-type grid struct {
-	width      int
-	height     int
-	points     [][]point
-	start      point
-	head       point
-	tail       point
-	tailPoints map[point]struct{}
-}
-
-func (g grid) String() string {
-	var out string
-	// Iterate from the top row down.
-	for y := g.height - 1; y >= 0; y-- {
-		for _, p := range g.points[y] {
-			if (equals(p, g.head) && equals(p, g.tail)) || (equals(p, g.head) && !equals(p, g.tail)) {
-				out += "H"
-			} else if equals(p, g.tail) {
-				out += "T"
-			} else if equals(p, g.start) {
-				out += "s"
-			} else {
-				out += "."
-			}
-		}
-		out += "\n"
-	}
-	return out
-}
-
-func newGrid(moves []move) grid {
-	// Initialize dimensions.
-	maxWidth := 0
-	maxHeight := 0
-	for _, m := range moves {
-		if m.dir == left || m.dir == right {
-			if m.count > maxWidth {
-				maxWidth = m.count
-			}
-		}
-		if m.dir == up || m.dir == down {
-			if m.count > maxHeight {
-				maxHeight = m.count
-			}
-		}
-	}
-
-	// We assume that the width or height is equal to one more than the longest move vertically or horizontally.
-	width := maxWidth + 1
-	height := maxHeight + 1
-
-	// Initialize points.
-	points := [][]point{}
-	for y := 0; y < height; y++ {
-		row := []point{}
-		for x := 0; x < width; x++ {
-			row = append(row, point{x: x, y: y})
-		}
-		points = append(points, row)
-	}
-
-	// Initialize the point (0,0) as the start point.
-	start := point{x: 0, y: 0}
-	head := point{x: 0, y: 0}
-	tail := point{x: 0, y: 0}
-
-	tailPoints := make(map[point]struct{})
-
-	return grid{width: width, height: height, points: points, start: start, head: head, tail: tail, tailPoints: tailPoints}
-}
-
-func (g *grid) move(m move) {
-	// fmt.Println(m)
-	for i := 0; i < m.count; i++ {
-		// Move head.
-		switch m.dir {
-		case right:
-			g.head.x++
-		case left:
-			g.head.x--
-		case up:
-			g.head.y++
-		case down:
-			g.head.y--
-		}
-
-		// Move tail.
-		// Rules for tail moves:
-		// * tail must always be adjacent to head
-		// * if tail is adjacent to head after the move: tail does not move
-		// * if tail is not adjacent to head after the move:
-		//   * if head moved right: tail moves right one and to the same y coord
-		//   * if head moved left: tail moves left one and to the same y coord
-		//   * if head moved up: tail moves up one and to the same x coord
-		//   * if head moved down: tail moves down one and to the same x coord
-		if adjacent(g.head, g.tail) {
-			continue
-		}
-		switch m.dir {
-		case right:
-			g.tail.x++
-			g.tail.y = g.head.y
-		case left:
-			g.tail.x--
-			g.tail.y = g.head.y
-		case up:
-			g.tail.y++
-			g.tail.x = g.head.x
-		case down:
-			g.tail.y--
-			g.tail.x = g.head.x
-		}
-		g.tailPoints[g.tail] = struct{}{}
-		// fmt.Println(g)
-	}
-}
-
-func adjacent(p1, p2 point) bool {
+// touching determines if two points are "touching" per the problem's definition. Diagonally adjacent or even
+// overlapping also count as "touching".
+func touching(p1, p2 point) bool {
 	xDiff := p1.x - p2.x
 	yDiff := p1.y - p2.y
 	if (xDiff >= -1 && xDiff <= 1) && (yDiff >= -1 && yDiff <= 1) {
@@ -170,7 +48,91 @@ func adjacent(p1, p2 point) bool {
 	return false
 }
 
+type knot struct {
+	point
+	parent  *knot
+	child   *knot
+	visited map[point]struct{}
+}
+
+func (k *knot) move(d direction) {
+	// Move the knot if it's the head.
+	if k.parent == nil {
+		switch d {
+		case right:
+			k.x++
+		case left:
+			k.x--
+		case up:
+			k.y++
+		case down:
+			k.y--
+		}
+		if k.child != nil {
+			k.child.move(d)
+		}
+		return
+	}
+
+	// We don't need to move knots that are already touching.
+	if touching(k.point, k.parent.point) {
+		if k.child != nil {
+			k.child.move(d)
+		}
+		return
+	}
+
+	// The knots are not touching, move them.
+	if k.x == k.parent.x || k.y == k.parent.y {
+		// Points are in the same row or column.
+		// "If the head is ever two steps directly up, down, left, or right from the tail, the tail must also move
+		// one step in that direction so it remains close enough"
+		k.y += (k.parent.y - k.y) / 2
+		k.x += (k.parent.x - k.x) / 2
+	} else {
+		// Points aren't in the same row or column and one delta is more than 1, move diagonally towards the parent.
+		// "Otherwise, if the head and tail aren't touching and aren't in the same row or column, the tail always
+		// moves one step diagonally to keep up"
+		if k.parent.x-k.x < 0 {
+			k.x--
+		} else {
+			k.x++
+		}
+		if k.parent.y-k.y < 0 {
+			k.y--
+		} else {
+			k.y++
+		}
+	}
+	k.visited[k.point] = struct{}{}
+
+	if k.child != nil {
+		k.child.move(d)
+	}
+}
+
+func newKnot() *knot {
+	k := &knot{}
+	k.visited = map[point]struct{}{}
+	k.visited[k.point] = struct{}{}
+	return k
+}
+
+func newKnots(count int) (*knot, *knot) {
+	head := newKnot()
+	curr := head
+	for i := 0; i < count-1; i++ {
+		k := newKnot()
+		k.parent = curr
+		curr.child = k
+		curr = k
+	}
+	return head, curr
+}
+
 func main() {
+	// f, err := os.Open("example.txt")
+	// f, err := os.Open("example2.txt")
 	f, err := os.Open("input.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -187,10 +149,19 @@ func main() {
 		moves = append(moves, m)
 	}
 
-	g := newGrid(moves)
-
+	head, tail := newKnots(2)
 	for _, m := range moves {
-		g.move(m)
+		for i := 0; i < m.count; i++ {
+			head.move(m.dir)
+		}
 	}
-	fmt.Println("Solution 1:", len(g.tailPoints))
+	fmt.Println("Solution 1:", len(tail.visited))
+
+	head2, tail2 := newKnots(10)
+	for _, m := range moves {
+		for i := 0; i < m.count; i++ {
+			head2.move(m.dir)
+		}
+	}
+	fmt.Println("Solution 2:", len(tail2.visited))
 }
