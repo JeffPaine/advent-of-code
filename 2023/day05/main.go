@@ -104,27 +104,21 @@ func solutionOne(seeds []int, bundles []bundle) int {
 
 func solutionTwo(seeds []int, bundles []bundle) int {
 	// Seeds are now a range.
-	var starts []int
+	minLocation := math.MaxInt
 	base := 0
 	for idx, seed := range seeds {
 		if idx%2 == 0 {
 			base = seed
 			continue
 		}
-		starts = append(starts, base)
-		for i := 1; i <= seed; i++ {
-			starts = append(starts, base+i)
-		}
-	}
-
-	minLocation := math.MaxInt
-	for _, start := range starts {
-		location := start
-		for _, b := range bundles {
-			location = b.lookup(location)
-		}
-		if location < minLocation {
-			minLocation = location
+		for i := 0; i <= seed+1; i++ {
+			location := base + i
+			for _, b := range bundles {
+				location = b.lookup(location)
+			}
+			if location < minLocation {
+				minLocation = location
+			}
 		}
 	}
 
