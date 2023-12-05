@@ -76,13 +76,8 @@ func parse(r io.Reader) ([]int, []bundle) {
 			bundleNum++
 			continue
 		}
-		// Now processing a line. Example:
-		// 50 98 2
-		// Pos 0: desination range start
-		// Pos 1: source range start
-		// Pos 2: range length
-		vals := strings.Fields(scanner.Text())
-		c := newChart(vals)
+		// Now processing a line. Example: 50 98 2
+		c := newChart(strings.Fields(scanner.Text()))
 		bundles[bundleNum].charts = append(bundles[bundleNum].charts, c)
 	}
 	return seeds, bundles
